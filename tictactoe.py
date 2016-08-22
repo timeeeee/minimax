@@ -49,51 +49,6 @@ def is_full(board):
     return all(all(s is not None for s in row) for row in board)
 
 
-def minmax(board, player, depth=0):
-    """Get best next move for player and its score
-
-    Specifically, return row and col of a players best move, and and integer
-    representing score: -1 if the best possible outcome for the player is a
-    loss, 0 for a tie, 1 for a win.
-
-    Use the minmax algorithm- For all open spaces, recurse to find the other
-    players next move, and choose this players move to minimize the next
-    players score.
-    """
-    best_row = None
-    best_col = None
-    least_next_score = float("inf")
-    for row_index in range(3):
-        for col_index in range(3):
-            if board[row_index][col_index] == SPACE:
-                # Set this space. After evaluating it we will need to unset it
-                board[row_index][col_index] = player
-
-                # If we just won, go here!
-                if did_player_win(board, player):
-                    board[row_index][col_index] = SPACE
-                    return (row_index, col_index), 9 - depth
-
-                # Did we draw?
-                if is_full(board):
-                    # This was the only option so we can just return it
-                    board[row_index][col_index] = SPACE
-                    return (row_index, col_index), 0
-
-                # Otherwise recurse to get the next player's move
-                _, next_score = minmax(board, not(player), depth + 1)
-
-                if next_score < least_next_score:
-                    least_next_score = next_score
-                    best_row = row_index
-                    best_col = col_index
-
-                board[row_index][col_index] = SPACE
-
-    score = -least_next_score  # because the game is zero-sum
-    return (best_row, best_col), score
-
-
 def naive_take_turn(board):
     """Take the first open spot"""
     new_board = deepcopy(board)
@@ -106,7 +61,7 @@ def naive_take_turn(board):
 
 def take_turn(board, player=X):
     """Return the board after o's next turn."""
-    (row, col), _ = minmax(board, player)
+    (row, col), _ = tic_tac_toe_minimax(board, player)
     board = deepcopy(board)
     board[row][col] = player
     return board
@@ -139,3 +94,77 @@ def board_to_string(board):
     """Convert board to string"""
     return "".join(
         "".join(PLAYER_TO_CHAR[spot] for spot in row) for row in board)
+
+
+def get_next_moves(board, player):
+    """
+    Return a dictionary of all possible moves, and their resulting boards.
+    """
+    moves = dict()
+    for row in range(3):
+        for col in range(3):
+            if board[row][col] == SPACE:
+                moves[(row, col)] = deepcopy(board)
+                moves[(row, col)][row][col] = player
+    return moves
+
+
+def get_final_score(board, player):
+    """
+    Return the final score for player, or None if the game isn't over.
+    """
+    if did_player_win(board, player):
+        return 1
+    if did_player_win(board, not(player)):
+        return -1
+    if is_full(board):
+        return 0
+
+    # Otherwise, the game isn't over yet!
+    return None
+
+
+def tic_tac_toe_minimax(board, player, depth=0):
+    """Get best next move for player and its score
+
+    Specifically, return row and col of a players best move, and and integer
+    representing score: -1 if the best possible outcome for the player is a
+    loss, 0 for a tie, 1 for a win.
+
+    Use the minmax algorithm- For all open spaces, recurse to find the other
+    players next move, and choose this players move to minimize the next
+    players score.
+    """
+    best_row = None
+    best_col = None
+    least_next_score = float("inf")
+    for row_index in range(3):
+        for col_index in range(3):
+            if board[row_index][col_index] == SPACE:
+                # Set this space. After evaluating it we will need to unset it
+                board[row_index][col_index] = player
+
+                # If we just won, go here!
+                if did_player_win(board, player):
+                    board[row_index][col_index] = SPACE
+                    return (row_index, col_index), 9 - depth
+
+                # Did we draw?
+                if is_full(board):
+                    # This was the only option so we can just return it
+                    board[row_index][col_index] = SPACE
+                    return (row_index, col_index), 0
+
+                # Otherwise recurse to get the next player's move
+                _, next_score = tic_tac_toe_minimax(
+                    board, not(player), depth + 1)
+
+                if next_score < least_next_score:
+                    least_next_score = next_score
+                    best_row = row_index
+                    best_col = col_index
+
+                board[row_index][col_index] = SPACE
+
+    score = -least_next_score  # because the game is zero-sum
+    return (best_row, best_col), score

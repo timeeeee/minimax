@@ -4,6 +4,8 @@ from tictactoe import (
     did_player_win, did_player_win_horizontal, did_player_win_vertical,
     did_player_win_diagonal, take_turn)
 
+from minimax import tic_tac_toe_minimax
+
 
 def rotations(seq):
     seq = list(seq)
@@ -100,3 +102,27 @@ def test_take_turn_blocks_3():
                 next_turn = take_turn(block, player)
                 assert not did_player_win_horizontal(next_turn, player)
                 assert not did_player_win(next_turn, player)
+
+
+def minimax_ttt_blocks_3():
+    """Make sure minimax.tic_tac_toe_minimax blocks immediately"""
+    """
+    for player in [True, False]:
+        other_player = not(player)
+
+        # Check horizontal
+        for row in rotations([player, player, None]):
+            for board in rotations(
+                    [row, [None, None, None], [None, None, None]]):
+                _, block, _= tic_tac_toe_minimax(board, other_player)
+                _, next_turn, _ = tic_tac_toe_minimax(block, player)
+                assert not did_player_win_horizontal(next_turn, player)
+                assert not did_player_win(next_turn, player)
+    """
+    board = [[None, None, None], [None, False, None], [None, None, None]]
+    move, new_board, score = tic_tac_toe_minimax(board, True)
+    print new_board
+
+
+if __name__ == "__main__":
+    minimax_ttt_blocks_3()
